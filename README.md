@@ -1,8 +1,4 @@
-﻿Certainly! Here’s a `README.md` file for your Node.js application that uses Express and Firestore:
-
----
-
-# Rodex-Capstone API
+﻿# Rodex-Capstone API
 
 This project is a RESTful API built with Node.js and Express, designed to manage user registration, login, and road inspection processes. The data is stored in Google Firestore.
 
@@ -231,14 +227,81 @@ Ensure you have a Firebase project set up, and you have the correct service acco
     - `404 Not Found` if the inspection is not found.
     - `500 Internal Server Error` if fetching the detail fails.
 
-## Contributing
+### `POST /image/upload`
 
-Contributions are welcome! Please submit a pull request or open an issue to discuss improvements or fixes.
+**Description:** This endpoint handles the upload of an image file, processes the image using Roboflow to detect damage, and saves the processed results and image to Google Cloud Storage. Additionally, damage details are saved to Firestore.
 
-## License
+## Request
 
-This project is licensed under the MIT License.
+### Headers
 
----
+- `Content-Type: multipart/form-data`
 
-This `README.md` file provides a clear and concise overview of the project, including setup instructions, usage, and API documentation.
+### Form-data
+
+- **file** (required): The image file to be uploaded. Must be in a supported image format (e.g., JPG, PNG).
+- **identifier** (required): A unique identifier for the image to distinguish it in storage.
+- **location** (optional): The location where the image was taken.
+
+### Example Request
+
+```bash
+curl -X POST http://your-api-url/image/upload \
+  -F "file=@path/to/your/image.jpg" \
+  -F "identifier=image_001" \
+  -F "location=New York, USA"
+```
+
+## Response
+
+### Success
+
+- **Status Code:** `200 OK`
+- **Content-Type:** `application/json`
+  
+**Response Body:**
+
+```json
+{
+  "labeledImageUrl": "gs://bucket_name/path/to/labeled_image.jpg",
+  "resultUrl": "gs://bucket_name/path/to/damages.jsonl",
+  "damages": {
+    "count_damages": 2,
+    "count_damages_type_0": 1,
+    "count_damages_type_1": 0,
+    "count_damages_type_2": 1,
+    "count_damages_type_3": 0,
+    "detected": true,
+    "image": "example_image_01",
+    "location": "jakarta, Indonesia"
+  }
+}
+```
+
+### Error
+
+- **Status Code:** `400 Bad Request`
+  - **Message:** `Image file or identifier is missing`
+- **Status Code:** `500 Internal Server Error`
+  - **Message:** `Error processing image`
+
+## Processing Details
+
+1. **Image Upload:** The image file is uploaded and saved temporarily.
+2. **Image Processing:** The image is processed using the Roboflow API to detect damages.
+3. **Result Storage:**
+   - **Labeled Image:** The image with annotations is uploaded to Google Cloud Storage.
+   - **Damage Details:** The damage details are saved in JSON Lines (JSONL) format and uploaded to Google Cloud Storage.
+   - **Firestore:** Damage details are saved in Firestore for record-keeping.
+
+## JSON Lines (JSONL) Format
+
+Damage details are stored in JSON Lines (JSONL) format, where each line is a valid JSON object representing a damage record. This format is efficient for handling and processing large volumes of data.
+
+**Example JSONL Line:**
+
+```json
+{"count_damages":2,"count_damages_type_0":1,"count_damages_type_1":0,"count_damages_type_2":1,"count_damages_type_3":0,"detected":true,"image":"example_image_01","location":"jakarta, Indonesia"}
+```
+
+Each line contains a complete JSON object representing a single record of damage details.

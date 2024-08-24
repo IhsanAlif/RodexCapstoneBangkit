@@ -1,18 +1,32 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
+const imageRoutes = require('./routes/imageRoutes');
+const videoRoutes = require('./routes/videoRoutes');
+const db = require('./config/db'); // Firestore initialization
 
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Middleware setup
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
-app.use('/auth', authRoutes);
+// Route handlers
+app.use('/image', imageRoutes);
+app.use('/video', videoRoutes);
+app.use('/user', userRoutes);
 app.use('/inspection', inspectionRoutes);
 
+// Home route
 app.get('/', (req, res) => {
   res.send('Rodex-Capstone');
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
 });
 
 module.exports = app;
