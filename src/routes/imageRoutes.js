@@ -8,4 +8,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/upload', upload.single('file'), imageController.uploadAndProcessImage);
 
+// Route to get and list all damages
+router.get('/damages', imageController.getAllDamages);
+
+// Route to get a single damage by ID
+router.get('/damages/:id', imageController.getDamageById);
+
 module.exports = router;

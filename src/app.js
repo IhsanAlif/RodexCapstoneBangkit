@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const userRoutes = require('./routes/userRoutes');
 const inspectionRoutes = require('./routes/inspectionRoutes');
 const imageRoutes = require('./routes/imageRoutes');
-const videoRoutes = require('./routes/videoRoutes');
 const db = require('./config/db'); // Firestore initialization
 
 const app = express();
@@ -14,7 +13,6 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 
 // Route handlers
 app.use('/image', imageRoutes);
-app.use('/video', videoRoutes);
 app.use('/user', userRoutes);
 app.use('/inspection', inspectionRoutes);
 

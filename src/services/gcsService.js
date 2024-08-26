@@ -15,6 +15,18 @@ const generateTimestampedFilename = (identifier, extension) => {
     return `${timestamp}_${identifier}${extension}`;
 };
 
+// Function to make a file public
+const makeFilePublic = async (filePath) => {
+    try {
+        await bucket.file(filePath).makePublic();
+        console.log(`File ${filePath} is now public.`);
+        return `https://storage.googleapis.com/${bucketName}/${filePath}`;
+    } catch (error) {
+        console.error('Error making file public:', error);
+        throw new Error('Error making file public');
+    }
+};
+
 // Function to upload a file to GCS
 const uploadFile = async (filePath, destination) => {
     try {
@@ -26,7 +38,7 @@ const uploadFile = async (filePath, destination) => {
             },
         });
         console.log(`File ${filePath} uploaded to ${destination}`);
-        return `gs://${bucketName}/${destination}`;
+        return await makeFilePublic(destination); // Make the file public after uploading
     } catch (error) {
         console.error('Error uploading file to GCS:', error);
         throw new Error('Error uploading file to GCS');
