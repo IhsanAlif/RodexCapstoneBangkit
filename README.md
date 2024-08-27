@@ -60,14 +60,14 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 
 2. **Access the API:**
 
-   Open your browser or use Postman to access the API at `<Rodex-Capstone-Url>`.
+   Open your browser or use Postman to access the API at `https://us-central1-capstone-426015.cloudfunctions.net/api`.
 
 # API Endpoints
 
 ## Authentication
 
 ### Login User
-- **URL:** `<Rodex-Capstone-Url>/user/login`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/login`
 - **Method:** `POST`
 - **Request Body:**
   ```json
@@ -78,7 +78,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
   ```
 
 ### Update User
-- **URL:** `<Rodex-Capstone-Url>/user/update/:id`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/update/:id`
 - **Method:** `PUT`
 - **Request Body:**
   ```json
@@ -93,7 +93,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
   - `id` - The ID of the user to be updated
 
 ### Register User
-- **URL:** `<Rodex-Capstone-Url>/user/register`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/register`
 - **Method:** `POST`
 - **Request Body:**
   ```json
@@ -108,7 +108,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 ## Damage Detection
 
 ### Upload Image
-- **URL:** `<Rodex-Capstone-Url>/image/upload`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/upload`
 - **Method:** `POST`
 - **Request Body (Form Data):**
   - `identifier` - Example image identifier
@@ -116,11 +116,11 @@ Ensure you have a Firebase project set up, and you have the correct service acco
   - `file` - The image file to upload
 
 ### Get All Damage Detection
-- **URL:** `<Rodex-Capstone-Url>/image/damages`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages`
 - **Method:** `GET`
 
 ### Get Damage Detail
-- **URL:** `<Rodex-Capstone-Url>/image/damages/:id`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages/:id`
 - **Method:** `GET`
 - **URL Parameters:**
   - `id` - The ID of the damage detail to retrieve
@@ -128,7 +128,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 ## Inspection
 
 ### Start Inspection
-- **URL:** `<Rodex-Capstone-Url>/inspection/new`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/new`
 - **Method:** `POST`
 - **Request Body:**
   ```json
@@ -142,7 +142,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
   ```
 
 ### End Inspection
-- **URL:** `<Rodex-Capstone-Url>/inspection/end`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/end`
 - **Method:** `POST`
 - **Request Body:**
   ```json
@@ -152,11 +152,11 @@ Ensure you have a Firebase project set up, and you have the correct service acco
   ```
 
 ### Get All Inspections
-- **URL:** `<Rodex-Capstone-Url>/inspection/get`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get`
 - **Method:** `GET`
 
 ### Get Inspection Detail
-- **URL:** `<Rodex-Capstone-Url>/inspection/get/:id`
+- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get/:id`
 - **Method:** `GET`
 - **URL Parameters:**
   - `id` - The ID of the inspection detail to retrieve
