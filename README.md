@@ -36,8 +36,7 @@ This project is a RESTful API built with Node.js and Express, designed to manage
    Create a `.env` file in the root directory and add the following variables:
 
    ```env
-   PORT=8080
-   FIREBASE_DATABASE_URL=https://your-database-url.firebaseio.com
+   GOOGLE_APPLICATION_CREDENTIALS=src/config/serviceAccountKey.json
    ```
 
 ## Configuration
