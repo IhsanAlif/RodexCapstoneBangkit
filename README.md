@@ -109,10 +109,10 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 ### Upload Image
 - **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/upload`
 - **Method:** `POST`
-- **Request Body (Form Data):**
+- **Request Body (RAW):**
   - `identifier` - Example image identifier
   - `inspectionId` - The ID of the related inspection
-  - `file` - The image file to upload
+  - `file` - The image file to upload in base64 String
 
 ### Get All Damage Detection
 - **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages`
@@ -135,6 +135,7 @@ Ensure you have a Firebase project set up, and you have the correct service acco
     "name_of_officer": "John Doe",
     "name_of_road": "Main Street",
     "length_of_road": "5 km",
+    "width_of_road": "5 km",
     "type_of_road_surface": "Asphalt",
     "location_start": "37.7749,-122.4194"
   }

@@ -11,6 +11,23 @@ exports.registerUser = async (req, res) => {
     }
 
     try {
+        // Check if the email or username already exists
+        const existingUserSnapshot = await db.collection('users')
+            .where('email', '==', email)
+            .get();
+        
+        const existingUsernameSnapshot = await db.collection('users')
+            .where('username', '==', username)
+            .get();
+
+        if (!existingUserSnapshot.empty) {
+            return res.status(400).send('Email already exists');
+        }
+
+        if (!existingUsernameSnapshot.empty) {
+            return res.status(400).send('Username already exists');
+        }
+
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 

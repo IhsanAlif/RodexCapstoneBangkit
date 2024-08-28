@@ -3,6 +3,14 @@ const fs = require('fs');
 const Jimp = require('jimp');
 const FormData = require('form-data');
 
+// Define colors for each class
+const colors = {
+    0: { r: 255, g: 0, b: 0 },    // Red
+    1: { r: 0, g: 255, b: 0 },    // Green
+    2: { r: 255, g: 255, b: 0 },  // Yellow
+    3: { r: 0, g: 0, b: 255 }     // Blue
+};
+
 exports.inferImageWithRoboflow = async (filePath) => {
     try {
         const formData = new FormData();
@@ -28,43 +36,49 @@ exports.inferImageWithRoboflow = async (filePath) => {
         // Load the font
         const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
 
-        result.predictions.forEach(prediction => {
+        // Filter predictions to include only those with confidence > 50%
+        const filteredPredictions = result.predictions.filter(prediction => prediction.confidence > 0.50);
+
+        filteredPredictions.forEach(prediction => {
             const { x, y, width, height, class: label, confidence } = prediction;
 
-            // Draw a yellow rectangle (border) around the detected object
+            // Get color based on the prediction class
+            const color = colors[label] || { r: 255, g: 255, b: 255 }; // Default to white if class not defined
+
+            // Draw a rectangle (border) around the detected object
             imageWithLabels.scan(
                 x - width / 2, y - height / 2, width, 1,
                 (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = 255;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = 255;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = 0;    // B
+                    imageWithLabels.bitmap.data[idx] = color.r;    // R
+                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
                     imageWithLabels.bitmap.data[idx + 3] = 255;  // A
                 });
 
             imageWithLabels.scan(
                 x - width / 2, y + height / 2 - 1, width, 1,
                 (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = 255;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = 255;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = 0;    // B
+                    imageWithLabels.bitmap.data[idx] = color.r;    // R
+                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
                     imageWithLabels.bitmap.data[idx + 3] = 255;  // A
                 });
 
             imageWithLabels.scan(
                 x - width / 2, y - height / 2, 1, height,
                 (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = 255;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = 255;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = 0;    // B
+                    imageWithLabels.bitmap.data[idx] = color.r;    // R
+                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
                     imageWithLabels.bitmap.data[idx + 3] = 255;  // A
                 });
 
             imageWithLabels.scan(
                 x + width / 2 - 1, y - height / 2, 1, height,
                 (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = 255;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = 255;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = 0;    // B
+                    imageWithLabels.bitmap.data[idx] = color.r;    // R
+                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
                     imageWithLabels.bitmap.data[idx + 3] = 255;  // A
                 });
 
@@ -81,7 +95,7 @@ exports.inferImageWithRoboflow = async (filePath) => {
         const labeledImagePath = `${filePath.replace(/\.\w+$/, '')}_labeled.jpg`;
         await imageWithLabels.writeAsync(labeledImagePath);
 
-        return { result, labeledImagePath };
+        return { result: { ...result, predictions: filteredPredictions }, labeledImagePath };
     } catch (error) {
         console.error('Error inferring image with Roboflow:', error);
         throw new Error('Error processing image with Roboflow');

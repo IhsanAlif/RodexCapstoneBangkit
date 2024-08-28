@@ -5,13 +5,17 @@ const { uploadImage, uploadJson } = require('../services/gcsService');
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid'); // For unique identifiers
 
-const tempDir = path.join(__dirname, '../../temp'); // Define temp directory
+const tempDir = '/tmp'; // Use the /tmp directory for Firebase Functions
 
 // Helper function to transform Roboflow JSON to saveDamage format
-const transformRoboflowData = (roboflowData, inspectionId, imageName, imageUrl) => {
+const transformRoboflowData = (id, roboflowData, inspectionId, imageName, imageUrl) => {
     const { predictions } = roboflowData;
 
+    // Get current date in ISO 8601 format
+    const currentDate = new Date().toISOString();
+
     const damages = {
+        id: id,
         inspectionId: inspectionId,
         count_damages: predictions.length,
         count_damages_type_0: predictions.filter(p => p.class_id === 0).length,
@@ -21,16 +25,18 @@ const transformRoboflowData = (roboflowData, inspectionId, imageName, imageUrl) 
         detected: predictions.length > 0,
         image: imageName,
         image_url: imageUrl, // Include the public image URL
+        date_created: currentDate // Add current date in ISO format
     };
 
     return damages;
 };
 
-// Function to save damage data to Firestore
-const saveDamage = async (damage) => {
+// Function to save damage data to Firestore and return the ID
+const saveDamage = async (id, damage) => {
     try {
-        await db.collection('damages').add(damage);
+        const damageRef = await db.collection('damages').doc(id).set(damage);
         console.log('Damage saved:', damage);
+        return damageRef.id; // Return the ID of the saved damage
     } catch (error) {
         console.error('Error saving damage:', error);
         throw new Error('Error saving damage');
@@ -75,48 +81,58 @@ exports.getDamageById = async (req, res) => {
     }
 };
 
+// Function to get damages by inspectionId
+exports.getDamagesByInspectionId = async (req, res) => {
+    const { inspectionId } = req.params;
+
+    try {
+        const damagesSnapshot = await db.collection('damages').where('inspectionId', '==', inspectionId).get();
+        if (damagesSnapshot.empty) {
+            return res.status(404).send('No damages found for the provided inspection ID');
+        }
+
+        const damages = [];
+        damagesSnapshot.forEach(doc => {
+            damages.push({ id: doc.id, ...doc.data() });
+        });
+
+        res.status(200).json(damages);
+    } catch (error) {
+        console.error('Error getting damages by inspection ID:', error);
+        res.status(500).send('Error getting damages by inspection ID');
+    }
+};
+
 // Function to post image
 exports.uploadAndProcessImage = async (req, res) => {
-    // Check if the request contains form-data with an image file
-    if (!req.file || !req.body.identifier ) {
+    if (!req.body || !req.body.file || !req.body.identifier) {
         return res.status(400).send('Image file or identifier is missing');
     }
 
     try {
-        const { file: imageFile } = req;
+        const id = uuidv4(); // Generate a unique inspection ID
+        const fileBuffer = Buffer.from(req.body.file, 'base64');
         const { identifier, inspectionId } = req.body;
 
         // Ensure the temporary directory exists
         await fs.ensureDir(tempDir);
 
-        // Define temporary paths
-        const tempImagePath = path.join(tempDir, `${uuidv4()}.jpg`);
-        const tempResultPath = path.join(tempDir, `${identifier}_result.json`); // Changed extension to .jsonl
+        const tempImagePath = path.join(tempDir, `${id}.jpg`);
+        const tempResultPath = path.join(tempDir, `${identifier}_result.json`);
 
-        // Save the uploaded image to a temporary file
-        await fs.writeFile(tempImagePath, imageFile.buffer);
+        await fs.writeFile(tempImagePath, fileBuffer);
 
-        // Process the image using Roboflow
         const { result, labeledImagePath } = await inferImageWithRoboflow(tempImagePath);
-
-        // Upload the labeled image to GCS and get the public URL
         const labeledImageUrl = await uploadImage(labeledImagePath, identifier);
 
-        // Transform Roboflow result to saveDamage format, including the public image URL
-        const damages = transformRoboflowData(result, inspectionId, identifier, labeledImageUrl);
+        const damages = transformRoboflowData(id, result, inspectionId, identifier, labeledImageUrl);
+        await saveDamage(id, damages); // Save the damage into Firestore
 
-        // Save damage record to Firestore
-        await saveDamage(damages);
-
-        // Save and upload the transformed damages as JSONL
-        const jsonLData = JSON.stringify(damages); // Convert to single-line JSON string
-        fs.writeFileSync(tempResultPath, `${jsonLData}\n`); // Append newline for JSONL format
+        const jsonLData = JSON.stringify(damages);
+        fs.writeFileSync(tempResultPath, `${jsonLData}\n`);
         await uploadJson(tempResultPath, identifier);
 
-        // Clean up temporary files
-        await fs.remove(tempDir);
-
-        res.json(damages);
+        res.status(201).json(damages); // Include the damage ID in the response
     } catch (error) {
         console.error('Error processing image:', error);
         res.status(500).send('Error processing image');
