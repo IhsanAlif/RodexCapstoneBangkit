@@ -93,6 +93,14 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 
 ## API Endpoints
 
+### Initialization
+
+#### Initialization
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api`
+- **Description**: API Initialization Endpoint.
+
 ### Authentication
 
 #### [Authentication] Register User
@@ -217,11 +225,3 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 - **Method**: `GET`
 - **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages/477851bc-96af-4d04-9841-6604feadd7f0`
 - **Description**: Retrieves detailed damage detection information by its ID.
-
-### Initialization
-
-#### Initialization
-
-- **Method**: `GET`
-- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api`
-- **Description**: API Initialization Endpoint.
