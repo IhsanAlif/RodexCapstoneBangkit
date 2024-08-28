@@ -5,7 +5,7 @@ This project is a RESTful API built with Node.js and Express, designed to manage
 ## Project Structure
 
 ```
-.
+Rodex-Capstone API
 ├── .env
 ├── .firebaserc
 ├── .gitignore
