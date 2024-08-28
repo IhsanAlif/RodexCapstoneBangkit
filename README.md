@@ -2,6 +2,36 @@
 
 This project is a RESTful API built with Node.js and Express, designed to manage user registration, login, and road inspection processes. The data is stored in Google Firestore.
 
+## Project Structure
+
+```
+.
+├── .env
+├── .firebaserc
+├── .gitignore
+├── firebase.json
+├── index.js
+├── package-lock.json
+├── package.json
+├── README.md
+├── tree.txt
+└── src
+    ├── app.js
+    ├── config
+    │   └── db.js
+    ├── controllers
+    │   ├── imageController.js
+    │   ├── inspectionController.js
+    │   └── userController.js
+    ├── routes
+    │   ├── imageRoutes.js
+    │   ├── inspectionRoutes.js
+    │   └── userRoutes.js
+    └── services
+        ├── gcsService.js
+        └── roboflowService.js
+```
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -61,102 +91,137 @@ Ensure you have a Firebase project set up, and you have the correct service acco
 
    Open your browser or use Postman to access the API at `https://us-central1-capstone-426015.cloudfunctions.net/api`.
 
-# API Endpoints
+## API Endpoints
 
-## Authentication
+### Authentication
 
-### Login User
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/login`
-- **Method:** `POST`
-- **Request Body:**
-  ```json
-  {
-    "username": "badmin",
-    "password": "pisangijo"
-  }
-  ```
+#### [Authentication] Register User
 
-### Update User
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/update/:id`
-- **Method:** `PUT`
-- **Request Body:**
-  ```json
-  {
-    "username": "badmin",
-    "email": "bcough@gmail.com",
-    "password": "pisangijo",
-    "role": "admin"
-  }
-  ```
-- **URL Parameters:**
-  - `id` - The ID of the user to be updated
+- **Method**: `POST`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/user/register`
+- **Body (JSON)**:
+    ```json
+    {
+      "username": "adminDummy",
+      "email": "adminDummy@gmail.com",
+      "password": "pisangijo",
+      "role": "admin"
+    }
+    ```
+- **Description**: Registers a new user with the provided credentials.
 
-### Register User
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/user/register`
-- **Method:** `POST`
-- **Request Body:**
-  ```json
-  {
-    "username": "buser",
-    "email": "bcox@gmail.com",
-    "password": "pisangijo",
-    "role": "user"
-  }
-  ```
+#### [Authentication] Login User
 
-## Damage Detection
+- **Method**: `POST`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/user/login`
+- **Body (JSON)**:
+    ```json
+    {
+      "username": "adminDummy",
+      "password": "pisangijo"
+    }
+    ```
+- **Description**: Logs in an existing user.
 
-### Upload Image
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/upload`
-- **Method:** `POST`
-- **Request Body (RAW):**
-  - `identifier` - Example image identifier
-  - `inspectionId` - The ID of the related inspection
-  - `file` - The image file to upload in base64 String
+#### [Authentication] Update User
 
-### Get All Damage Detection
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages`
-- **Method:** `GET`
+- **Method**: `PUT`
+- **URL**: `http://localhost:8080/user/update/D8FQQGPAI2SOeSvdqh22`
+- **Body (JSON)**:
+    ```json
+    {
+      "username": "adminDummy",
+      "email": "bcough@gmail.com",
+      "password": "pisangijo",
+      "role": "admin"
+    }
+    ```
+- **Description**: Updates user information for a specific user.
 
-### Get Damage Detail
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages/:id`
-- **Method:** `GET`
-- **URL Parameters:**
-  - `id` - The ID of the damage detail to retrieve
+### Inspection
 
-## Inspection
+#### [Inspection] Inspection Get Detail
 
-### Start Inspection
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/new`
-- **Method:** `POST`
-- **Request Body:**
-  ```json
-  {
-    "name_of_officer": "John Doe",
-    "name_of_road": "Main Street",
-    "length_of_road": "5 km",
-    "width_of_road": "5 km",
-    "type_of_road_surface": "Asphalt",
-    "location_start": "37.7749,-122.4194"
-  }
-  ```
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get/043cef93-46f6-4814-b488-89fc17cdedc2`
+- **Description**: Retrieves details for a specific inspection by `inspectionId`.
 
-### End Inspection
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/end`
-- **Method:** `POST`
-- **Request Body:**
-  ```json
-  {
-    "location_end": "37.7749,-122.4194"
-  }
-  ```
+#### [Inspection] Inspection Start
 
-### Get All Inspections
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get`
-- **Method:** `GET`
+- **Method**: `POST`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/new`
+- **Body (JSON)**:
+    ```json
+    {
+      "name_of_officer": "John Doe",
+      "name_of_road": "Fatmawati",
+      "length_of_road": "9 km",
+      "width_of_road": "20 m",
+      "type_of_road_surface": "Asphalt",
+      "location_start": "411.7749,-123.4194"
+    }
+    ```
+- **Description**: Starts a new inspection.
 
-### Get Inspection Detail
-- **URL:** `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get/:id`
-- **Method:** `GET`
-- **URL Parameters:**
-  - `id` - The ID of the inspection detail to retrieve
+#### [Inspection] Inspection End
+
+- **Method**: `POST`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/end`
+- **Body (JSON)**:
+    ```json
+    {
+      "inspectionId": "043cef93-46f6-4814-b488-89fc17cdedc2",
+      "location_end": "40.7749,-322.4394"
+    }
+    ```
+- **Description**: Ends an inspection with the given `inspectionId`.
+
+#### [Inspection] Inspection Get All
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/inspection/get`
+- **Description**: Retrieves all inspections.
+
+### Damage Detection
+
+#### [Damage Detection] Get Damage with InspectionId
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/image/inspection-damages/043cef93-46f6-4814-b488-89fc17cdedc2`
+- **Description**: Retrieves damage data associated with a specific `inspectionId`.
+
+#### [Damage Detection] Upload Image
+
+- **Method**: `POST`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/image/upload`
+- **Headers**: 
+  - `Content-Type: multipart/form-data` (disabled)
+- **Body (JSON)**:
+    ```json
+    {
+      "file": "<add encoded base64 image>",
+      "identifier": "example_image_09",
+      "inspectionId": "043cef93-46f6-4814-b488-89fc17cdedc2"
+    }
+    ```
+- **Description**: Uploads an image to be processed for damage detection, associated with a given `inspectionId`.
+
+#### [Damage Detection] Get All Damage Detection
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages`
+- **Description**: Retrieves all damage detections.
+
+#### [Damage Detection] Get Damage Detail
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api/image/damages/477851bc-96af-4d04-9841-6604feadd7f0`
+- **Description**: Retrieves detailed damage detection information by its ID.
+
+### Initialization
+
+#### Initialization
+
+- **Method**: `GET`
+- **URL**: `https://us-central1-capstone-426015.cloudfunctions.net/api`
+- **Description**: API Initialization Endpoint.
