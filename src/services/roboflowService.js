@@ -11,93 +11,105 @@ const colors = {
     3: { r: 0, g: 0, b: 255 }     // Blue
 };
 
-exports.inferImageWithRoboflow = async (filePath) => {
-    try {
-        const formData = new FormData();
-        formData.append("name", "file");
-        formData.append("file", fs.createReadStream(filePath));
-        formData.append("split", "train");
+exports.inferImageWithRoboflow = function(filePath, callback) {
+    const formData = new FormData();
+    formData.append("name", "file");
+    formData.append("file", fs.createReadStream(filePath));
+    formData.append("split", "train");
 
-        const response = await axios({
-            method: 'POST',
-            url: 'https://detect.roboflow.com/road-damage-ww8ex/1',
-            params: { api_key: 'mSuiLDlfOqxZArfLhDtL' },
-            data: formData,
-            headers: formData.getHeaders()
-        });
-
+    axios({
+        method: 'POST',
+        url: 'https://detect.roboflow.com/road-damage-ww8ex/1',
+        params: { api_key: 'mSuiLDlfOqxZArfLhDtL' },
+        data: formData,
+        headers: formData.getHeaders()
+    })
+    .then(function(response) {
         if (!response || !response.data || !response.data.predictions) {
-            throw new Error('Invalid response from Roboflow API');
+            return callback(new Error('Invalid response from Roboflow API'));
         }
 
         const result = response.data;
-        const imageWithLabels = await Jimp.read(filePath);
+        Jimp.read(filePath, function(err, imageWithLabels) {
+            if (err) {
+                return callback(new Error('Error reading image file'));
+            }
 
-        // Load the font
-        const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+            // Load the font
+            Jimp.loadFont(Jimp.FONT_SANS_32_BLACK, function(err, font) {
+                if (err) {
+                    return callback(new Error('Error loading font'));
+                }
 
-        // Filter predictions to include only those with confidence > 50%
-        const filteredPredictions = result.predictions.filter(prediction => prediction.confidence > 0.50);
+                // Filter predictions to include only those with confidence > 50%
+                const filteredPredictions = result.predictions.filter(prediction => prediction.confidence > 0.50);
 
-        filteredPredictions.forEach(prediction => {
-            const { x, y, width, height, class: label, confidence } = prediction;
+                filteredPredictions.forEach(function(prediction) {
+                    const { x, y, width, height, class: label, confidence } = prediction;
 
-            // Get color based on the prediction class
-            const color = colors[label] || { r: 255, g: 255, b: 255 }; // Default to white if class not defined
+                    // Get color based on the prediction class
+                    const color = colors[label] || { r: 255, g: 255, b: 255 }; // Default to white if class not defined
 
-            // Draw a rectangle (border) around the detected object
-            imageWithLabels.scan(
-                x - width / 2, y - height / 2, width, 1,
-                (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = color.r;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
-                    imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                    // Draw a rectangle (border) around the detected object
+                    imageWithLabels.scan(
+                        x - width / 2, y - height / 2, width, 1,
+                        function(xPos, yPos, idx) {
+                            imageWithLabels.bitmap.data[idx] = color.r;    // R
+                            imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                            imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
+                            imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                        });
+
+                    imageWithLabels.scan(
+                        x - width / 2, y + height / 2 - 1, width, 1,
+                        function(xPos, yPos, idx) {
+                            imageWithLabels.bitmap.data[idx] = color.r;    // R
+                            imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                            imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
+                            imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                        });
+
+                    imageWithLabels.scan(
+                        x - width / 2, y - height / 2, 1, height,
+                        function(xPos, yPos, idx) {
+                            imageWithLabels.bitmap.data[idx] = color.r;    // R
+                            imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                            imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
+                            imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                        });
+
+                    imageWithLabels.scan(
+                        x + width / 2 - 1, y - height / 2, 1, height,
+                        function(xPos, yPos, idx) {
+                            imageWithLabels.bitmap.data[idx] = color.r;    // R
+                            imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
+                            imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
+                            imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                        });
+
+                    // Draw the label above the detected object
+                    imageWithLabels.print(
+                        font,
+                        x - width / 2,
+                        y - height / 2 - 32,
+                        `${label} (${(confidence * 100).toFixed(2)}%)`
+                    );
                 });
 
-            imageWithLabels.scan(
-                x - width / 2, y + height / 2 - 1, width, 1,
-                (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = color.r;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
-                    imageWithLabels.bitmap.data[idx + 3] = 255;  // A
-                });
+                // Convert the image to a buffer and encode to Base64
+                imageWithLabels.getBuffer(Jimp.MIME_JPEG, function(err, buffer) {
+                    if (err) {
+                        return callback(new Error('Error converting image to buffer'));
+                    }
 
-            imageWithLabels.scan(
-                x - width / 2, y - height / 2, 1, height,
-                (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = color.r;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
-                    imageWithLabels.bitmap.data[idx + 3] = 255;  // A
-                });
+                    const labeledImageEncoded = buffer.toString('base64');
 
-            imageWithLabels.scan(
-                x + width / 2 - 1, y - height / 2, 1, height,
-                (xPos, yPos, idx) => {
-                    imageWithLabels.bitmap.data[idx] = color.r;    // R
-                    imageWithLabels.bitmap.data[idx + 1] = color.g;  // G
-                    imageWithLabels.bitmap.data[idx + 2] = color.b;    // B
-                    imageWithLabels.bitmap.data[idx + 3] = 255;  // A
+                    callback(null, { result: { ...result, predictions: filteredPredictions }, labeledImageEncoded });
                 });
-
-            // Draw the label above the detected object
-            imageWithLabels.print(
-                font,
-                x - width / 2,
-                y - height / 2 - 32,
-                `${label} (${(confidence * 100).toFixed(2)}%)`
-            );
+            });
         });
-
-        // Save the image with labels
-        const labeledImagePath = `${filePath.replace(/\.\w+$/, '')}_labeled.jpg`;
-        await imageWithLabels.writeAsync(labeledImagePath);
-
-        return { result: { ...result, predictions: filteredPredictions }, labeledImagePath };
-    } catch (error) {
-        console.error('Error inferring image with Roboflow:', error);
-        throw new Error('Error processing image with Roboflow');
-    }
+    })
+    .catch(function(error) {
+        callback(new Error('Error inferring image with Roboflow: ' + error.message));
+    });
 };

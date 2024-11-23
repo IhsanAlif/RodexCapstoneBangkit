@@ -1,25 +1,26 @@
-// const admin = require('firebase-admin');
-// const serviceAccount = require('./serviceAccountKey.json'); // Path to your Firebase Admin SDK key file
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
 
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-//     storageBucket: 'YOUR_GCS_BUCKET_NAME.appspot.com' // Replace with your GCS bucket name
-// });
-
-// const db = admin.firestore();
-
-// module.exports = db;
-
-
-var admin = require("firebase-admin");
-
-var serviceAccount = require("./serviceAccountKey.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://capstone-426015-default-rtdb.firebaseio.com",
-  storageBucket: 'capstone-426015_cloudbuild.appspot.com' // Replace with your GCS bucket name
+// Initialize SQLite database
+const dbPath = path.resolve(__dirname, '../data/database.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error connecting to SQLite database:', err.message);
+    } else {
+        console.log('Connected to SQLite database');
+    }
 });
 
-const db = admin.firestore();
+// Gracefully close the database connection on app termination
+process.on('SIGINT', () => {
+    db.close((err) => {
+        if (err) {
+            console.error('Error closing SQLite database:', err.message);
+        } else {
+            console.log('Closed SQLite database');
+        }
+        process.exit(0);
+    });
+});
+
 module.exports = db;
